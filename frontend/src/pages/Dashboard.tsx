@@ -315,7 +315,7 @@ export default function Dashboard() {
                     <h2 className="text-xl font-semibold text-gray-900">Your Subdomain</h2>
                   </div>
                   <div className="flex items-center space-x-2">
-                    
+                    <a
                       href={subdomain.full_url}
                       target="_blank"
                       rel="noopener noreferrer"
