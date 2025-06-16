@@ -41,11 +41,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    // Check for token in URL (from OAuth redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    
+    if (urlToken) {
+      // Remove token from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Store token and fetch user
+      localStorage.setItem('token', urlToken);
       fetchUser().finally(() => setIsLoading(false));
     } else {
-      setIsLoading(false);
+      // Check for existing token
+      const token = localStorage.getItem('token');
+      if (token) {
+        fetchUser().finally(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
+      }
     }
   }, []);
 

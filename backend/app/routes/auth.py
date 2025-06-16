@@ -196,7 +196,7 @@ async def github_callback(code: str, state: str = None, db: Session = Depends(ge
         
         user = db.query(User).filter(
             (User.email == user_info["email"]) | 
-            (User.provider_id == user_info["id"], User.provider == "github")
+            ((User.provider_id == user_info["id"]) & (User.provider == "github"))
         ).first()
         
         if not user:
@@ -212,7 +212,7 @@ async def github_callback(code: str, state: str = None, db: Session = Depends(ge
             db.refresh(user)
         
         jwt_token = create_access_token(data={"sub": user.username})
-        return RedirectResponse(f"{settings.BASE_URL}/dashboard?token={jwt_token}")
+        return RedirectResponse(f"http://localhost:3000/auth/callback?token={jwt_token}")
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -236,7 +236,7 @@ async def discord_callback(code: str, state: str = None, db: Session = Depends(g
         
         user = db.query(User).filter(
             (User.email == user_info["email"]) | 
-            (User.provider_id == user_info["id"], User.provider == "discord")
+            ((User.provider_id == user_info["id"]) & (User.provider == "discord"))
         ).first()
         
         if not user:
@@ -252,7 +252,7 @@ async def discord_callback(code: str, state: str = None, db: Session = Depends(g
             db.refresh(user)
         
         jwt_token = create_access_token(data={"sub": user.username})
-        return RedirectResponse(f"{settings.BASE_URL}/dashboard?token={jwt_token}")
+        return RedirectResponse(f"http://localhost:3000/auth/callback?token={jwt_token}")
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
