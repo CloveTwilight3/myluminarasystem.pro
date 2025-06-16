@@ -1,8 +1,10 @@
 version: '3.8'
 
 services:
-  app:
-    build: .
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -18,15 +20,31 @@ services:
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - FROM_EMAIL=${FROM_EMAIL}
-      - BASE_URL=https://myluminarasystem.pro
+      - BASE_URL=http://localhost:3000
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     restart: unless-stopped
     volumes:
-      - ./logs:/app/logs
+      - ./backend:/app
+      - /app/__pycache__
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_BASE_URL=http://localhost:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev"]
+    depends_on:
+      - backend
 
   db:
     image: postgres:15-alpine
@@ -36,14 +54,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U luminara_user -d luminara_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   redis:
@@ -57,19 +69,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
-      - /var/log/nginx:/var/log/nginx
-    depends_on:
-      - app
     restart: unless-stopped
 
 volumes:

@@ -8,6 +8,7 @@ from ..schemas.auth import UserSignup, UserLogin, Token, EmailVerificationReques
 from ..auth.jwt import create_access_token, get_password_hash, verify_password
 from ..auth.oauth import github_oauth, discord_oauth
 from ..auth.email import email_service
+from ..config import settings
 import secrets
 import re
 

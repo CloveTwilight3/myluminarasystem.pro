@@ -232,3 +232,62 @@ async def create_admin_token(
     db.refresh(new_admin_token)
     
     return AdminTokenResponse(
+        token=admin_token,
+        created_at=new_admin_token.created_at.isoformat(),
+        message="Store this token securely - it won't be shown again"
+    )
+
+@router.get("/my/admin-token/status")
+async def get_admin_token_status(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    admin_token = db.query(AdminToken).filter(
+        AdminToken.user_id == current_user.id
+    ).first()
+    
+    return {
+        "has_token": admin_token is not None,
+        "created_at": admin_token.created_at.isoformat() if admin_token else None
+    }
+
+@router.delete("/my/admin-token")
+async def delete_admin_token(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    admin_token = db.query(AdminToken).filter(
+        AdminToken.user_id == current_user.id
+    ).first()
+    
+    if not admin_token:
+        raise HTTPException(
+            status_code=404,
+            detail="No admin token found"
+        )
+    
+    db.delete(admin_token)
+    db.commit()
+    
+    return {"message": "Admin token deleted successfully"}
+
+# Get subdomain info by subdomain name (public endpoint)
+@router.get("/{subdomain_name}", response_model=SubdomainResponse)
+async def get_subdomain_info(subdomain_name: str, db: Session = Depends(get_db)):
+    subdomain = db.query(Subdomain).filter(
+        Subdomain.subdomain == subdomain_name.lower()
+    ).first()
+    
+    if not subdomain:
+        raise HTTPException(
+            status_code=404,
+            detail="Subdomain not found"
+        )
+    
+    return SubdomainResponse(
+        id=subdomain.id,
+        subdomain=subdomain.subdomain,
+        full_url=f"https://{subdomain.subdomain}.myluminarasystem.pro",
+        created_at=subdomain.created_at.isoformat(),
+        owner_username=subdomain.owner.username
+    )
