@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Github, MessageSquare, Mail, User, Check, X } from 'lucide-react';
 import { RegisterData } from '../types/auth';
-import { validatePassword, validateUsername } from '../lib/utils';
+import { validatePassword, validateUsername } from '../lib/utils.ts';
 import api from '../lib/api';
 
 export default function Register() {
